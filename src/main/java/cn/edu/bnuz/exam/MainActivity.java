@@ -9,7 +9,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import cn.edu.bnuz.exam.modals.ExerciseInfo;
 
 public class MainActivity extends AppCompatActivity {
     private TabLayout mTabLayout;
@@ -19,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Fragment> mFragments;
     private List<String> mTitles;
 
-    private String[] titles = new String[]{"推荐", "娱乐", "科技", "军事", "奥运会", "视频", "情感", "图片", "时尚", "教育"};
+    private String[] titles = new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,13 +33,25 @@ public class MainActivity extends AppCompatActivity {
         mTabLayout = (TabLayout) findViewById(R.id.tablayout);
 
         mTitles = new ArrayList<>();
-        for (int i = 0; i < 9; i++) {
-            mTitles.add(titles[i]);
-        }
+        mTitles.addAll(Arrays.asList(titles));
         mFragments = new ArrayList<>();
+
         for (int i = 0; i < mTitles.size(); i++) {
-            mFragments.add(TabFragment.newInstance(i));
+            ExerciseInfo exerciseInfo = new ExerciseInfo();
+            if (i % 2 == 0) {
+                exerciseInfo.setType("single");
+                exerciseInfo.setTopic("这是题目这是题目这是题目这是题目这是题目这是题目这是题目这是题目这是题目");
+                String[] options = new String[]{"程序", "质量", "人员", "过程"};
+                exerciseInfo.setOptions(options);
+            } else {
+                exerciseInfo.setType("multi");
+                exerciseInfo.setTopic("人们常常把软件工程的方法（开发方法）、工具（支持方法的工具）、（）称为软件工程三要素。");
+                String[] options = new String[]{"软件工程", "软件测试", "软件设计", "软件维护"};
+                exerciseInfo.setOptions(options);
+            }
+            mFragments.add(TabFragment.newInstance(exerciseInfo));
         }
+
         adapter = new FragmentAdapter(getSupportFragmentManager(), mFragments, mTitles);
         mViewPager.setAdapter(adapter);//给ViewPager设置适配器
         mTabLayout.setupWithViewPager(mViewPager);//将TabLayout和ViewPager关联起来
