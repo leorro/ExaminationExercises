@@ -2,12 +2,15 @@ package cn.edu.bnuz.exam;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import cn.edu.bnuz.exam.modals.ExerciseInfo;
 
@@ -18,6 +21,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     private int[] optionIdList = new int[]{R.id.option1, R.id.option2, R.id.option3, R.id.option4};
     private String type;
     private View exerciseView;
+    private static int activedTabIndex = 0;
 
     public static TabFragment newInstance(ExerciseInfo exerciseInfo) {
         Bundle bundle = new Bundle();
@@ -27,6 +31,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         return fragment;
     }
 
+    /* 创建视图View，会提前创建下一个标签页的view，例如点击第二页，会生成第三页的标签页 */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ExerciseInfo exerciseInfo = (ExerciseInfo) getArguments().getSerializable("exerciseInfo");
@@ -36,6 +41,12 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         View view = inflater.inflate(R.layout.single_choice, null);
         TextView labelTextView = (TextView) view.findViewById(R.id.label);
         TextView topicTextView = (TextView) view.findViewById(R.id.topicTextView);
+        Button submitButton = (Button) view.findViewById(R.id.submit);
+
+
+        TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tablayout);
+        int tabsCount = tabLayout.getTabCount();
+        boolean isEndTab = activedTabIndex == tabsCount - 2;
 
         labelTextView.setText(getLabel(type));
         topicTextView.setText(String.format("\t\t\t\t\t\t\t\t\t\t\t%s", topic));
@@ -51,6 +62,11 @@ public class TabFragment extends Fragment implements View.OnClickListener {
             optionTextView.setText(option);
         }
 
+        if (isEndTab) {
+            submitButton.setText("立即提交");
+        }
+        submitButton.setOnClickListener(this);
+
         this.type = type;
         this.exerciseView = view;
         return view;
@@ -59,24 +75,33 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View view) {
         int buttonId = view.getId();
-        Button button = view.findViewById(buttonId);
-        int selectedIndex = findIndex(buttonIdList, buttonId);
-        boolean isSelected = selectedButton[selectedIndex];
+        switch (buttonId) {
+            case R.id.submit:
+                nextTab(view);
 
-        /* 如果是单选题的话，清空按钮选中状态 */
-        if (this.type.equals("single")) {
-            resetButtonSelected();
-        }
+//                Log.d(TAG, "ememmeme");
+                break;
+            default:
+                Button button = view.findViewById(buttonId);
+                int selectedIndex = findIndex(buttonIdList, buttonId);
+                boolean isSelected = selectedButton[selectedIndex];
 
-        /* 如果为选中，则改变样式，选中则还原样式 */
-        if (!isSelected) {
-            button.setBackgroundResource(R.drawable.option_active);
-            button.setTextColor(Color.rgb(255, 255, 255));
-            selectedButton[selectedIndex] = true;
-        } else {
-            button.setBackgroundResource(R.drawable.option_default);
-            button.setTextColor(Color.rgb(102, 102, 102));
-            selectedButton[selectedIndex] = false;
+                /* 如果是单选题的话，清空按钮选中状态 */
+                if (this.type.equals("single")) {
+                    resetButtonSelected();
+                }
+
+                /* 如果为选中，则改变样式，选中则还原样式 */
+                if (!isSelected) {
+                    button.setBackgroundResource(R.drawable.option_active);
+                    button.setTextColor(Color.rgb(255, 255, 255));
+                    selectedButton[selectedIndex] = true;
+                } else {
+                    button.setBackgroundResource(R.drawable.option_default);
+                    button.setTextColor(Color.rgb(102, 102, 102));
+                    selectedButton[selectedIndex] = false;
+                }
+                break;
         }
     }
 
@@ -115,5 +140,21 @@ public class TabFragment extends Fragment implements View.OnClickListener {
                 break;
         }
         return label;
+    }
+
+    private void nextTab(View view) {
+        TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tablayout);
+        int tabsCount = tabLayout.getTabCount();
+        boolean isEnd = activedTabIndex == tabsCount - 1;
+
+        if (!isEnd) {
+            activedTabIndex = activedTabIndex + 1;
+            tabLayout.getTabAt(activedTabIndex).select();
+            Log.d(TAG, "next tab is: " + activedTabIndex);
+
+        } else {
+            /* 提交答案 */
+            Toast.makeText(getContext(), "提交成功", Toast.LENGTH_SHORT).show();
+        }
     }
 }
