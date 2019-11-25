@@ -146,15 +146,28 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tablayout);
         int tabsCount = tabLayout.getTabCount();
         boolean isEnd = activedTabIndex == tabsCount - 1;
+        boolean isFinshed = isFinshed();
 
-        if (!isEnd) {
-            activedTabIndex = activedTabIndex + 1;
-            tabLayout.getTabAt(activedTabIndex).select();
-            Log.d(TAG, "next tab is: " + activedTabIndex);
-
+        /* 判断是否选择了至少一个选项 */
+        if (!isFinshed) {
+            Toast.makeText(getContext(), "请选择至少一个选项！", Toast.LENGTH_SHORT).show();
         } else {
-            /* 提交答案 */
-            Toast.makeText(getContext(), "提交成功", Toast.LENGTH_SHORT).show();
+            /* 判断是否为最后一页 */
+            if (!isEnd) {
+                activedTabIndex = activedTabIndex + 1;
+                tabLayout.getTabAt(activedTabIndex).select();
+            } else {
+                /* 提交答案 */
+                Toast.makeText(getContext(), "提交成功", Toast.LENGTH_SHORT).show();
+            }
         }
+    }
+
+    private boolean isFinshed() {
+        boolean isFinshed = false;
+        for (boolean eachButton : selectedButton) {
+            if (eachButton) return true;
+        }
+        return isFinshed;
     }
 }
