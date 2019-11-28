@@ -3,9 +3,18 @@ package cn.edu.bnuz.exam.modals;
 import java.io.Serializable;
 
 public class ExerciseInfo implements Serializable {
+    private int id;
     private String type;
     private String topic;
     private String[] options;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getType() {
         return type;
