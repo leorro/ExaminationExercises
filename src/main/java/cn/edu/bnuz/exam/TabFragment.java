@@ -2,7 +2,6 @@ package cn.edu.bnuz.exam;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -23,6 +22,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     private int id;
     private String type;
     private View exerciseView;
+    private boolean isSubmit = false;
 
     public static TabFragment newInstance(ExerciseInfo exerciseInfo) {
         Bundle bundle = new Bundle();
@@ -45,15 +45,8 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         TextView topicTextView = (TextView) view.findViewById(R.id.topicTextView);
         Button submitButton = (Button) view.findViewById(R.id.submit);
 
-        TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tablayout);
-        ViewPager viewPager = (ViewPager) getActivity().findViewById(R.id.viewpager);
         int tabsCount = MainActivity.getTotalTabsCount();
-        int currentIndex = MainActivity.getCurrentIndex();
         boolean isEndTab = id == tabsCount - 1;
-
-//        Log.d(TAG, String.valueOf(tabsCount));
-//        Log.d(TAG, String.valueOf(currentIndex));
-
 
         labelTextView.setText(getLabel(type));
         topicTextView.setText(String.format("\t\t\t\t\t\t\t\t\t\t\t%s", topic));
@@ -133,7 +126,6 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
     private void nextTab() {
         ViewPager viewPager = (ViewPager) getActivity().findViewById(R.id.viewpager);
-//        TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tablayout);
         boolean isEnd = MainActivity.getCurrentIndex() == MainActivity.getTotalTabsCount() - 1;
         boolean isFinshed = isFinshed();
         /* 判断是否选择了至少一个选项 */
@@ -144,16 +136,44 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
         MainActivity.setCurrentIndex(MainActivity.getCurrentIndex() + 1);
         viewPager.setCurrentItem(MainActivity.getCurrentIndex());
-//            tabLayout.getTabAt(MainActivity.getCurrentIndex()).select();
+
+        if (this.isSubmit) {
+            Toast.makeText(getContext(), "您已经提交过了！", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         /* 保存选择结果 */
         boolean isCorrect = true;
+        View view = this.exerciseView;
         for (int i = 0; i < 4; i++) {
+            int buttonId = buttonIdList[i];
+            int optionId = optionIdList[i];
+            Button button = view.findViewById(buttonId);
+            TextView textView = view.findViewById(optionId);
             boolean[] exerciseAnswer = (boolean[]) MainActivity.getExerciseAnswer().get(this.id);
-            if (selectedButton[i] != exerciseAnswer[i]) {
+            if (selectedButton[i] && exerciseAnswer[i]) {
+                button.setText("对");
+                continue;
+            }
+            if (!selectedButton[i] && exerciseAnswer[i]) {
+                button.setBackgroundResource(R.drawable.option_miss);
+                button.setTextColor(Color.rgb(255, 255, 255));
+                button.setText("漏");
+                textView.setTextColor(Color.rgb(254, 154, 139));
+
                 isCorrect = false;
-                break;
+            }
+            if (selectedButton[i] && !exerciseAnswer[i]) {
+                button.setBackgroundResource(R.drawable.option_error);
+                button.setTextColor(Color.rgb(255, 255, 255));
+                button.setText("错");
+                textView.setTextColor(Color.rgb(247, 140, 160));
+
+                isCorrect = false;
             }
         }
+
+        MainActivity.updateAnswerSituation(this.id, isCorrect);
 
         if (isCorrect) {
             Toast.makeText(getContext(), "回答正确", Toast.LENGTH_SHORT).show();
@@ -164,7 +184,12 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         if (isEnd) {
             /* 提交答案 */
             Toast.makeText(getContext(), "提交成功", Toast.LENGTH_SHORT).show();
+            for (boolean each : MainActivity.getAnswerSituation()) {
+                Log.d(TAG, String.valueOf(each));
+            }
         }
+
+        this.isSubmit = true;
     }
 
     private boolean isFinshed() {
@@ -175,6 +200,8 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     }
 
     private void updateButtonSelected(View view, int buttonId) {
+        if (this.isSubmit) return;
+
         Button button = view.findViewById(buttonId);
         int selectedIndex = findIndex(buttonIdList, buttonId);
         boolean isSelected = selectedButton[selectedIndex];
@@ -194,7 +221,5 @@ public class TabFragment extends Fragment implements View.OnClickListener {
             button.setTextColor(Color.rgb(102, 102, 102));
             selectedButton[selectedIndex] = false;
         }
-
-        MainActivity.updateAnswerSituation(this.id, true);
     }
 }
