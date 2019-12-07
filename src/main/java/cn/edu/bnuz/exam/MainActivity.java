@@ -1,5 +1,7 @@
 package cn.edu.bnuz.exam;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -11,13 +13,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import cn.edu.bnuz.exam.dehelper.MyDBHelper;
 import cn.edu.bnuz.exam.modals.ExerciseInfo;
 
 public class MainActivity extends AppCompatActivity {
     private static int currentIndex = 0;
     private static int totalTabsCount = 0;
     private static boolean[] answerSituation;
-    private static ArrayList exerciseAnswer;
+    private static ArrayList exerciseAnswer = new ArrayList();
 
     private TabLayout mTabLayout;
     private ViewPager mViewPager;
@@ -25,12 +28,17 @@ public class MainActivity extends AppCompatActivity {
     private List<Fragment> mFragments;
     private List<String> mTitles;
 
+    private MyDBHelper myDBHelper;
+    private SQLiteDatabase database;
+    Cursor cursor;
+
     private String[] titles = new String[]{"1", "2", "3", "4", "5", "6"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         mTabLayout = (TabLayout) findViewById(R.id.tablayout);
 //        mViewPager.setOffscreenPageLimit(10);
@@ -53,31 +61,35 @@ public class MainActivity extends AppCompatActivity {
         });
 
         setTotalTabsCount(titles.length);
-        initExerciseAnswer();
         initAnswerSituation();
-        for (boolean item : getAnswerSituation()) {
-            Log.d("MainActivity", String.valueOf(item));
-        }
         mTitles = new ArrayList<>();
         mTitles.addAll(Arrays.asList(titles));
         mFragments = new ArrayList<>();
 
-        for (int i = 0; i < mTitles.size(); i++) {
+        myDBHelper = new MyDBHelper(this, "exercise.db", null, 1);
+        database = myDBHelper.getWritableDatabase();
+        cursor = database.rawQuery("SELECT * FROM exercise_list", null);
+
+        cursor.moveToFirst();
+        while (cursor.getPosition() != cursor.getCount()) {
             ExerciseInfo exerciseInfo = new ExerciseInfo();
-            if (i % 2 == 0) {
-                exerciseInfo.setId(i);
-                exerciseInfo.setType("single");
-                exerciseInfo.setTopic("这是题目这是题目这是题目这是题目这是题目这是题目这是题目这是题目这是题目");
-                String[] options = new String[]{"程序", "质量", "人员", "过程"};
-                exerciseInfo.setOptions(options);
-            } else {
-                exerciseInfo.setId(i);
-                exerciseInfo.setType("multi");
-                exerciseInfo.setTopic("人们常常把软件工程的方法（开发方法）、工具（支持方法的工具）、（）称为软件工程三要素。");
-                String[] options = new String[]{"软件工程", "软件测试", "软件设计", "软件维护"};
-                exerciseInfo.setOptions(options);
-            }
+            int id = cursor.getPosition();
+            String type = cursor.getString(1);
+            String topic = cursor.getString(2);
+            String name = cursor.getString(3);
+            String[] options = cursor.getString(4).split(",");
+            String[] answer = cursor.getString(5).split(",");
+
+            setExerciseAnswer(answer);
+
+            exerciseInfo.setId(id);
+            exerciseInfo.setType(type);
+            exerciseInfo.setTopic(topic);
+            exerciseInfo.setOptions(options);
+
+
             mFragments.add(TabFragment.newInstance(exerciseInfo));
+            cursor.moveToNext();
         }
 
         adapter = new FragmentAdapter(getSupportFragmentManager(), mFragments, mTitles);
@@ -87,18 +99,12 @@ public class MainActivity extends AppCompatActivity {
         mTabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
     }
 
-    public static void initExerciseAnswer() {
-        exerciseAnswer = new ArrayList();
-        for (int i = 0; i < 6; i++) {
-            boolean[] eachExerciseAnswer = new boolean[4];
-            for (int j = 0; j < 4; j++) {
-                if (j % 2 == 0)
-                    eachExerciseAnswer[j] = true;
-                else
-                    eachExerciseAnswer[j] = false;
-            }
-            exerciseAnswer.add(eachExerciseAnswer);
+    private void setExerciseAnswer(String[] answerString) {
+        boolean[] eachExerciseAnswer = new boolean[]{false, false, false, false};
+        for (String answerIndex : answerString) {
+            eachExerciseAnswer[Integer.parseInt(answerIndex)] = true;
         }
+        exerciseAnswer.add(eachExerciseAnswer);
     }
 
     public static ArrayList getExerciseAnswer() {

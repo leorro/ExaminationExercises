@@ -144,13 +144,16 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
         /* 保存选择结果 */
         boolean isCorrect = true;
+        boolean[] exerciseAnswer = (boolean[]) MainActivity.getExerciseAnswer().get(this.id);
+//        for (boolean x : exerciseAnswer) {
+//            Log.d("TabFragment", String.valueOf(x));
+//        }
         View view = this.exerciseView;
         for (int i = 0; i < 4; i++) {
             int buttonId = buttonIdList[i];
             int optionId = optionIdList[i];
             Button button = view.findViewById(buttonId);
             TextView textView = view.findViewById(optionId);
-            boolean[] exerciseAnswer = (boolean[]) MainActivity.getExerciseAnswer().get(this.id);
             if (selectedButton[i] && exerciseAnswer[i]) {
                 button.setText("对");
                 continue;
