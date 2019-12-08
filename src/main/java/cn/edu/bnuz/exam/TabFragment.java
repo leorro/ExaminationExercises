@@ -1,5 +1,8 @@
 package cn.edu.bnuz.exam;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import cn.edu.bnuz.exam.modals.ExerciseInfo;
+import cn.edu.bnuz.exam.utils.SaveData;
 
 public class TabFragment extends Fragment implements View.OnClickListener {
     private String TAG = "TabFragment";
@@ -20,9 +24,11 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     private int[] buttonIdList = new int[]{R.id.button1, R.id.button2, R.id.button3, R.id.button4};
     private int[] optionIdList = new int[]{R.id.option1, R.id.option2, R.id.option3, R.id.option4};
     private int id;
+    private String name;
     private String type;
     private View exerciseView;
     private boolean isSubmit = false;
+    private double total = 0;
 
     public static TabFragment newInstance(ExerciseInfo exerciseInfo) {
         Bundle bundle = new Bundle();
@@ -36,6 +42,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ExerciseInfo exerciseInfo = (ExerciseInfo) getArguments().getSerializable("exerciseInfo");
         int id = exerciseInfo.getId();
+        String name = exerciseInfo.getName();
         String type = exerciseInfo.getType();
         String topic = exerciseInfo.getTopic();
         String[] options = exerciseInfo.getOptions();
@@ -68,6 +75,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         submitButton.setOnClickListener(this);
 
         this.id = id;
+        this.name = name;
         this.type = type;
         this.exerciseView = view;
         return view;
@@ -78,7 +86,6 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         int buttonId = view.getId();
         switch (buttonId) {
             case R.id.submit:
-//                Log.d(TAG, String.valueOf(MainActivity.getCurrentIndex()));
                 nextTab();
                 break;
             default:
@@ -126,16 +133,15 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
     private void nextTab() {
         ViewPager viewPager = (ViewPager) getActivity().findViewById(R.id.viewpager);
-        boolean isEnd = MainActivity.getCurrentIndex() == MainActivity.getTotalTabsCount() - 1;
+        boolean isEnd = viewPager.getCurrentItem() == MainActivity.getTotalTabsCount() - 1;
         boolean isFinshed = isFinshed();
         /* 判断是否选择了至少一个选项 */
         if (!isFinshed) {
             Toast.makeText(getContext(), "请选择至少一个选项！", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        MainActivity.setCurrentIndex(MainActivity.getCurrentIndex() + 1);
-        viewPager.setCurrentItem(MainActivity.getCurrentIndex());
+//        MainActivity.setCurrentIndex(MainActivity.getCurrentIndex() + 1);
+        viewPager.setCurrentItem(viewPager.getCurrentItem() + 1);
 
         if (this.isSubmit) {
             Toast.makeText(getContext(), "您已经提交过了！", Toast.LENGTH_SHORT).show();
@@ -143,11 +149,8 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         }
 
         /* 保存选择结果 */
-        boolean isCorrect = true;
+        int isCorrect = 1;
         boolean[] exerciseAnswer = (boolean[]) MainActivity.getExerciseAnswer().get(this.id);
-//        for (boolean x : exerciseAnswer) {
-//            Log.d("TabFragment", String.valueOf(x));
-//        }
         View view = this.exerciseView;
         for (int i = 0; i < 4; i++) {
             int buttonId = buttonIdList[i];
@@ -164,7 +167,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
                 button.setText("漏");
                 textView.setTextColor(Color.rgb(254, 154, 139));
 
-                isCorrect = false;
+                isCorrect = 0;
             }
             if (selectedButton[i] && !exerciseAnswer[i]) {
                 button.setBackgroundResource(R.drawable.option_error);
@@ -172,24 +175,36 @@ public class TabFragment extends Fragment implements View.OnClickListener {
                 button.setText("错");
                 textView.setTextColor(Color.rgb(247, 140, 160));
 
-                isCorrect = false;
+                isCorrect = 0;
             }
         }
 
         MainActivity.updateAnswerSituation(this.id, isCorrect);
 
-        if (isCorrect) {
+        if (isCorrect == 1) {
             Toast.makeText(getContext(), "回答正确", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(getContext(), "回答错误", Toast.LENGTH_SHORT).show();
         }
 
+        /* 提交答案 */
         if (isEnd) {
-            /* 提交答案 */
-            Toast.makeText(getContext(), "提交成功", Toast.LENGTH_SHORT).show();
-            for (boolean each : MainActivity.getAnswerSituation()) {
+            boolean isAllFinish = findIndex(MainActivity.getAnswerSituation(), -1) == -1;
+            if (!isAllFinish) {
+                Toast.makeText(getContext(), "请继续完成所有题目再提交", Toast.LENGTH_SHORT).show();
+                viewPager.setCurrentItem(findIndex(MainActivity.getAnswerSituation(), -1));
+                return;
+            }
+            for (int each : MainActivity.getAnswerSituation()) {
                 Log.d(TAG, String.valueOf(each));
             }
+
+            Toast.makeText(getContext(), "提交成功", Toast.LENGTH_SHORT).show();
+
+            this.showDialog();
+
+            SaveData saveDate = new SaveData(getContext());
+            saveDate.insertDatabase(name, total);
         }
 
         this.isSubmit = true;
@@ -224,5 +239,53 @@ public class TabFragment extends Fragment implements View.OnClickListener {
             button.setTextColor(Color.rgb(102, 102, 102));
             selectedButton[selectedIndex] = false;
         }
+    }
+
+    public void jumpToIndex() {
+        Intent intent = new Intent();
+        intent.setClassName("cn.edu.bnuz.exam", "cn.edu.bnuz.exam.IndexActivity");
+        Bundle bundle = new Bundle();
+        bundle.putString("exerciseName", name);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    private void showDialog() {
+        String dialogMessage = "";
+        int[] answerSituation = MainActivity.getAnswerSituation();
+        int count = MainActivity.getTotalTabsCount();
+        double total = 0;
+
+        for (int index = 0; index < answerSituation.length; index++) {
+            String isCorrect = answerSituation[index] == 1 ? "正确" : "错误";
+            double score = answerSituation[index] == 1 ? 100 / (count * 1.0) : 0;
+            total += score;
+            dialogMessage += String.format("第%d题:\t\t%s\t\t\t\t\t\t\t\t得分:\t\t%.2f\n", index + 1, isCorrect, score);
+        }
+        this.total = total;
+        if (total < 60) {
+            dialogMessage += String.format("\n成绩: %.2f，总分不及格！", total);
+        } else {
+            dialogMessage += String.format("\n成绩: %.2f，恭喜你及格了！", total);
+        }
+        final AlertDialog.Builder alterDiaglog = new AlertDialog.Builder(getContext());
+        alterDiaglog.setIcon(R.drawable.icon);
+        alterDiaglog.setTitle("成绩分析报告");
+        alterDiaglog.setMessage(dialogMessage);
+
+        alterDiaglog.setPositiveButton("确认并退出", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                jumpToIndex();
+            }
+        });
+
+        alterDiaglog.setNeutralButton("返回", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+
+        alterDiaglog.show();
     }
 }

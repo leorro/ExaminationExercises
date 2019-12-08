@@ -1,5 +1,6 @@
 package cn.edu.bnuz.exam;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -7,19 +8,17 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import cn.edu.bnuz.exam.adapter.FragmentAdapter;
 import cn.edu.bnuz.exam.dehelper.MyDBHelper;
 import cn.edu.bnuz.exam.modals.ExerciseInfo;
 
 public class MainActivity extends AppCompatActivity {
-    private static int currentIndex = 0;
     private static int totalTabsCount = 0;
-    private static boolean[] answerSituation;
+    private static int[] answerSituation;
     private static ArrayList exerciseAnswer = new ArrayList();
 
     private TabLayout mTabLayout;
@@ -32,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private SQLiteDatabase database;
     Cursor cursor;
 
-    private String[] titles = new String[]{"1", "2", "3", "4", "5", "6"};
+    private String[] titles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,12 +40,10 @@ public class MainActivity extends AppCompatActivity {
 
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         mTabLayout = (TabLayout) findViewById(R.id.tablayout);
-//        mViewPager.setOffscreenPageLimit(10);
         mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
-                setCurrentIndex(tab.getPosition());
             }
 
             @Override
@@ -60,15 +57,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        setTotalTabsCount(titles.length);
-        initAnswerSituation();
         mTitles = new ArrayList<>();
-        mTitles.addAll(Arrays.asList(titles));
         mFragments = new ArrayList<>();
 
         myDBHelper = new MyDBHelper(this, "exercise.db", null, 1);
         database = myDBHelper.getWritableDatabase();
         cursor = database.rawQuery("SELECT * FROM exercise_list", null);
+
+        setTotalTabsCount(cursor.getCount());
+        initAnswerSituation();
 
         cursor.moveToFirst();
         while (cursor.getPosition() != cursor.getCount()) {
@@ -83,19 +80,20 @@ public class MainActivity extends AppCompatActivity {
             setExerciseAnswer(answer);
 
             exerciseInfo.setId(id);
+            exerciseInfo.setName(name);
             exerciseInfo.setType(type);
             exerciseInfo.setTopic(topic);
             exerciseInfo.setOptions(options);
 
-
+            mTitles.add(String.valueOf(id + 1));
             mFragments.add(TabFragment.newInstance(exerciseInfo));
             cursor.moveToNext();
         }
 
         adapter = new FragmentAdapter(getSupportFragmentManager(), mFragments, mTitles);
-        mViewPager.setAdapter(adapter);//给ViewPager设置适配器
-        mViewPager.setOffscreenPageLimit(titles.length);
-        mTabLayout.setupWithViewPager(mViewPager);//将TabLayout和ViewPager关联起来
+        mViewPager.setAdapter(adapter);
+        mViewPager.setOffscreenPageLimit(mTitles.size());// 设置缓存页面数，防止点击效果被刷新
+        mTabLayout.setupWithViewPager(mViewPager);
         mTabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
     }
 
@@ -112,26 +110,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static void initAnswerSituation() {
-        answerSituation = new boolean[getTotalTabsCount()];
+        answerSituation = new int[getTotalTabsCount()];
         for (int i = 0; i < answerSituation.length; i++) {
-            answerSituation[i] = false;
+            answerSituation[i] = -1;
         }
     }
 
-    public static void updateAnswerSituation(int index, boolean value) {
+    public static void updateAnswerSituation(int index, int value) {
         answerSituation[index] = value;
     }
 
-    public static boolean[] getAnswerSituation() {
+    public static int[] getAnswerSituation() {
         return answerSituation;
-    }
-
-    public static int getCurrentIndex() {
-        return currentIndex;
-    }
-
-    public static void setCurrentIndex(int currentIndex) {
-        MainActivity.currentIndex = currentIndex;
     }
 
     public static int getTotalTabsCount() {

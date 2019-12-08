@@ -1,4 +1,4 @@
-package cn.edu.bnuz.exam;
+package cn.edu.bnuz.exam.adapter;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
