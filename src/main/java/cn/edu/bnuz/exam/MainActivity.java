@@ -1,6 +1,5 @@
 package cn.edu.bnuz.exam;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -8,9 +7,12 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import cn.edu.bnuz.exam.adapter.FragmentAdapter;
 import cn.edu.bnuz.exam.dehelper.MyDBHelper;
@@ -64,13 +66,25 @@ public class MainActivity extends AppCompatActivity {
         database = myDBHelper.getWritableDatabase();
         cursor = database.rawQuery("SELECT * FROM exercise_list", null);
 
-        setTotalTabsCount(cursor.getCount());
+        /* 设置总共展示的题目数量 */
+        setTotalTabsCount(10);
+        /* 定义做题情况列表 */
         initAnswerSituation();
 
+        for (Integer each : getRandomExercise()) {
+            Log.d("MainActivity", String.valueOf(each));
+        }
+
+        Set<Integer> randomIndexSet = getRandomExercise();
+        int id = 0;
         cursor.moveToFirst();
         while (cursor.getPosition() != cursor.getCount()) {
+            if (!randomIndexSet.contains(cursor.getPosition())) {
+                cursor.moveToNext();
+                continue;
+            }
+
             ExerciseInfo exerciseInfo = new ExerciseInfo();
-            int id = cursor.getPosition();
             String type = cursor.getString(1);
             String topic = cursor.getString(2);
             String name = cursor.getString(3);
@@ -87,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
 
             mTitles.add(String.valueOf(id + 1));
             mFragments.add(TabFragment.newInstance(exerciseInfo));
+
+            randomIndexSet.remove(cursor.getPosition());
+            id++;
+
             cursor.moveToNext();
         }
 
@@ -97,6 +115,18 @@ public class MainActivity extends AppCompatActivity {
         mTabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
     }
 
+    /* 生成随机题目下标集合 */
+    private Set<Integer> getRandomExercise() {
+        Set<Integer> hashset = new HashSet<>();
+        while (true) {
+            hashset.add((int) (Math.random() * 16));
+            if (hashset.size() == 10) {
+                return hashset;
+            }
+        }
+    }
+
+    /* 设置每道题目的答案 */
     private void setExerciseAnswer(String[] answerString) {
         boolean[] eachExerciseAnswer = new boolean[]{false, false, false, false};
         for (String answerIndex : answerString) {
@@ -109,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
         return exerciseAnswer;
     }
 
+    /* 定义用户做题的列表，-1表示未完成，0表示错误，1表示正确 */
     public static void initAnswerSituation() {
         answerSituation = new int[getTotalTabsCount()];
         for (int i = 0; i < answerSituation.length; i++) {
@@ -116,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /* 更新做题情况 */
     public static void updateAnswerSituation(int index, int value) {
         answerSituation[index] = value;
     }
