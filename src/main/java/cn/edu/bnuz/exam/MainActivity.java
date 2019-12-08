@@ -33,8 +33,6 @@ public class MainActivity extends AppCompatActivity {
     private SQLiteDatabase database;
     Cursor cursor;
 
-    private String[] titles;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /* 生成标签栏的题号 */
         mTitles = new ArrayList<>();
         mFragments = new ArrayList<>();
 
@@ -71,14 +70,11 @@ public class MainActivity extends AppCompatActivity {
         /* 定义做题情况列表 */
         initAnswerSituation();
 
-        for (Integer each : getRandomExercise()) {
-            Log.d("MainActivity", String.valueOf(each));
-        }
-
         Set<Integer> randomIndexSet = getRandomExercise();
         int id = 0;
         cursor.moveToFirst();
         while (cursor.getPosition() != cursor.getCount()) {
+            /* 如果不在生成的随机下标集合内，则跳过 */
             if (!randomIndexSet.contains(cursor.getPosition())) {
                 cursor.moveToNext();
                 continue;
@@ -91,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
             String[] options = cursor.getString(4).split(",");
             String[] answer = cursor.getString(5).split(",");
 
+            /* 设置该题目的答案 */
             setExerciseAnswer(answer);
 
             exerciseInfo.setId(id);
@@ -99,9 +96,12 @@ public class MainActivity extends AppCompatActivity {
             exerciseInfo.setTopic(topic);
             exerciseInfo.setOptions(options);
 
+            /* 添加题号 */
             mTitles.add(String.valueOf(id + 1));
+            /* 添加标签页 */
             mFragments.add(TabFragment.newInstance(exerciseInfo));
 
+            /* 移除该随机下标 */
             randomIndexSet.remove(cursor.getPosition());
             id++;
 
@@ -110,8 +110,10 @@ public class MainActivity extends AppCompatActivity {
 
         adapter = new FragmentAdapter(getSupportFragmentManager(), mFragments, mTitles);
         mViewPager.setAdapter(adapter);
-        mViewPager.setOffscreenPageLimit(mTitles.size());// 设置缓存页面数，防止点击效果被刷新
+        /* 设置缓存页数，防止做题状态被更新 */
+        mViewPager.setOffscreenPageLimit(mTitles.size());
         mTabLayout.setupWithViewPager(mViewPager);
+        /* 设置标签页导航栏为可滚动 */
         mTabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
     }
 

@@ -31,6 +31,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     private double total = 0;
 
     public static TabFragment newInstance(ExerciseInfo exerciseInfo) {
+        /* 为下面的onCreateView传数据 */
         Bundle bundle = new Bundle();
         bundle.putSerializable("exerciseInfo", exerciseInfo);
         TabFragment fragment = new TabFragment();
@@ -47,17 +48,22 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         String topic = exerciseInfo.getTopic();
         String[] options = exerciseInfo.getOptions();
 
+        /* 定义布局文件 */
         View view = inflater.inflate(R.layout.single_choice, null);
         TextView labelTextView = (TextView) view.findViewById(R.id.label);
         TextView topicTextView = (TextView) view.findViewById(R.id.topicTextView);
         Button submitButton = (Button) view.findViewById(R.id.submit);
 
         int tabsCount = MainActivity.getTotalTabsCount();
+        /* 判断是否为最后一页，如果是则将按钮改为“立即提交” */
         boolean isEndTab = id == tabsCount - 1;
 
+        /* 设置习题分类：单选题/多选题 */
         labelTextView.setText(getLabel(type));
+        /* 设置习题题目 */
         topicTextView.setText(String.format("\t\t\t\t\t\t\t\t\t\t\t%s", topic));
 
+        /* 为四个按钮添加文本以及点击事件函数 */
         for (int index = 0; index < 4; index++) {
             int buttonId = buttonIdList[index];
             int optionId = optionIdList[index];
@@ -86,9 +92,11 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         int buttonId = view.getId();
         switch (buttonId) {
             case R.id.submit:
+                /* 点击的按钮为提交或者下一题 */
                 nextTab();
                 break;
             default:
+                /* 点击选项按钮，更新按钮状态 */
                 updateButtonSelected(view, buttonId);
                 break;
         }
@@ -131,6 +139,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         return label;
     }
 
+    /* 当点击下一题/立即提交所执行的函数 */
     private void nextTab() {
         ViewPager viewPager = (ViewPager) getActivity().findViewById(R.id.viewpager);
         boolean isEnd = viewPager.getCurrentItem() == MainActivity.getTotalTabsCount() - 1;
@@ -140,9 +149,10 @@ public class TabFragment extends Fragment implements View.OnClickListener {
             Toast.makeText(getContext(), "请选择至少一个选项！", Toast.LENGTH_SHORT).show();
             return;
         }
-//        MainActivity.setCurrentIndex(MainActivity.getCurrentIndex() + 1);
+        /* 标签页向后跳转一页 */
         viewPager.setCurrentItem(viewPager.getCurrentItem() + 1);
 
+        /* 如果已经提交过，则提示已经提交过了，不能再更改状态 */
         if (this.isSubmit) {
             Toast.makeText(getContext(), "您已经提交过了！", Toast.LENGTH_SHORT).show();
             return;
@@ -179,6 +189,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
             }
         }
 
+        /* 更新做题情况 */
         MainActivity.updateAnswerSituation(this.id, isCorrect);
 
         if (isCorrect == 1) {
@@ -189,20 +200,20 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
         /* 提交答案 */
         if (isEnd) {
+            /* 判断是否全部完成，若未完成，则跳转到第一个未完成的页面 */
             boolean isAllFinish = findIndex(MainActivity.getAnswerSituation(), -1) == -1;
             if (!isAllFinish) {
                 Toast.makeText(getContext(), "请继续完成所有题目再提交", Toast.LENGTH_SHORT).show();
                 viewPager.setCurrentItem(findIndex(MainActivity.getAnswerSituation(), -1));
                 return;
             }
-            for (int each : MainActivity.getAnswerSituation()) {
-                Log.d(TAG, String.valueOf(each));
-            }
 
             Toast.makeText(getContext(), "提交成功", Toast.LENGTH_SHORT).show();
 
+            /* 展示成绩分析报告弹窗 */
             this.showDialog();
 
+            /* 添加进数据库 */
             SaveData saveDate = new SaveData(getContext());
             saveDate.insertDatabase(name, total);
         }
@@ -210,6 +221,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         this.isSubmit = true;
     }
 
+    /* 判断是否点击至少一个按钮 */
     private boolean isFinshed() {
         for (boolean eachButton : selectedButton) {
             if (eachButton) return true;
@@ -217,6 +229,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         return false;
     }
 
+    /* 更新按钮点击状态 */
     private void updateButtonSelected(View view, int buttonId) {
         if (this.isSubmit) return;
 
@@ -241,6 +254,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    /* 跳转到排行榜页面 */
     public void jumpToIndex() {
         Intent intent = new Intent();
         intent.setClassName("cn.edu.bnuz.exam", "cn.edu.bnuz.exam.IndexActivity");
@@ -250,12 +264,14 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         startActivity(intent);
     }
 
+    /* 展示成绩分析报告对话框 */
     private void showDialog() {
         String dialogMessage = "";
         int[] answerSituation = MainActivity.getAnswerSituation();
         int count = MainActivity.getTotalTabsCount();
         double total = 0;
 
+        /* 判断每一题的做题情况 */
         for (int index = 0; index < answerSituation.length; index++) {
             String isCorrect = answerSituation[index] == 1 ? "正确" : "错误";
             double score = answerSituation[index] == 1 ? 100 / (count * 1.0) : 0;
