@@ -1,4 +1,4 @@
-package cn.edu.bnuz.exam.dehelper;
+package cn.edu.bnuz.exam.dbhelper;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
