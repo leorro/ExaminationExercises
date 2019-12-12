@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +16,7 @@ import android.widget.Toast;
 
 import cn.edu.bnuz.exam.modals.ExerciseInfo;
 import cn.edu.bnuz.exam.utils.SaveData;
+import cn.edu.bnuz.exam.utils.MyUtils;
 
 public class TabFragment extends Fragment implements View.OnClickListener {
     private String TAG = "TabFragment";
@@ -24,7 +24,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     private int[] buttonIdList = new int[]{R.id.button1, R.id.button2, R.id.button3, R.id.button4};
     private int[] optionIdList = new int[]{R.id.option1, R.id.option2, R.id.option3, R.id.option4};
     private int id;
-    private String name;
+    private String exercisename;
     private String type;
     private View exerciseView;
     private boolean isSubmit = false;
@@ -43,13 +43,13 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ExerciseInfo exerciseInfo = (ExerciseInfo) getArguments().getSerializable("exerciseInfo");
         int id = exerciseInfo.getId();
-        String name = exerciseInfo.getName();
+        String exercisename = exerciseInfo.getName();
         String type = exerciseInfo.getType();
         String topic = exerciseInfo.getTopic();
         String[] options = exerciseInfo.getOptions();
 
         /* 定义布局文件 */
-        View view = inflater.inflate(R.layout.single_choice, null);
+        View view = inflater.inflate(R.layout.option_choice, null);
         TextView labelTextView = (TextView) view.findViewById(R.id.label);
         TextView topicTextView = (TextView) view.findViewById(R.id.topicTextView);
         Button submitButton = (Button) view.findViewById(R.id.submit);
@@ -59,7 +59,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         boolean isEndTab = id == tabsCount - 1;
 
         /* 设置习题分类：单选题/多选题 */
-        labelTextView.setText(getLabel(type));
+        labelTextView.setText(MyUtils.getLabel(type));
         /* 设置习题题目 */
         topicTextView.setText(String.format("\t\t\t\t\t\t\t\t\t\t\t%s", topic));
 
@@ -81,7 +81,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         submitButton.setOnClickListener(this);
 
         this.id = id;
-        this.name = name;
+        this.exercisename = exercisename;
         this.type = type;
         this.exerciseView = view;
         return view;
@@ -102,13 +102,6 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /* 找出指定元素的下标 */
-    private int findIndex(int[] arr, int target) {
-        for (int index = 0; index < arr.length; index++)
-            if (arr[index] == target) return index;
-        return -1;
-    }
-
     /* 重置按钮选中状态 */
     private void resetButtonSelected() {
         View view = this.exerciseView;
@@ -120,23 +113,6 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
             selectedButton[index] = false;
         }
-    }
-
-    /* 获取不同类型题目的label标签 */
-    private String getLabel(String type) {
-        String label = "未知题";
-        switch (type) {
-            case "single":
-                label = "单选题";
-                break;
-            case "multi":
-                label = "多选题";
-                break;
-            case "judge":
-                label = "判断题";
-                break;
-        }
-        return label;
     }
 
     /* 当点击下一题/立即提交所执行的函数 */
@@ -201,10 +177,10 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         /* 提交答案 */
         if (isEnd) {
             /* 判断是否全部完成，若未完成，则跳转到第一个未完成的页面 */
-            boolean isAllFinish = findIndex(MainActivity.getAnswerSituation(), -1) == -1;
+            boolean isAllFinish = MyUtils.findIndex(MainActivity.getAnswerSituation(), -1) == -1;
             if (!isAllFinish) {
                 Toast.makeText(getContext(), "请继续完成所有题目再提交", Toast.LENGTH_SHORT).show();
-                viewPager.setCurrentItem(findIndex(MainActivity.getAnswerSituation(), -1));
+                viewPager.setCurrentItem(MyUtils.findIndex(MainActivity.getAnswerSituation(), -1));
                 return;
             }
 
@@ -215,7 +191,8 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
             /* 添加进数据库 */
             SaveData saveDate = new SaveData(getContext());
-            saveDate.insertDatabase(name, total);
+            String username = MainActivity.getUsername();
+            saveDate.insertDatabase(username, exercisename, total);
         }
 
         this.isSubmit = true;
@@ -234,7 +211,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         if (this.isSubmit) return;
 
         Button button = view.findViewById(buttonId);
-        int selectedIndex = findIndex(buttonIdList, buttonId);
+        int selectedIndex = MyUtils.findIndex(buttonIdList, buttonId);
         boolean isSelected = selectedButton[selectedIndex];
 
         /* 如果是单选题的话，清空按钮选中状态 */
@@ -259,7 +236,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         Intent intent = new Intent();
         intent.setClassName("cn.edu.bnuz.exam", "cn.edu.bnuz.exam.IndexActivity");
         Bundle bundle = new Bundle();
-        bundle.putString("exerciseName", name);
+        bundle.putString("exerciseName", exercisename);
         intent.putExtras(bundle);
         startActivity(intent);
     }

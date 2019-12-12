@@ -1,5 +1,6 @@
 package cn.edu.bnuz.exam;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -15,13 +16,14 @@ import java.util.List;
 import java.util.Set;
 
 import cn.edu.bnuz.exam.adapter.FragmentAdapter;
-import cn.edu.bnuz.exam.dehelper.MyDBHelper;
+import cn.edu.bnuz.exam.dbhelper.MyDBHelper;
 import cn.edu.bnuz.exam.modals.ExerciseInfo;
 
 public class MainActivity extends AppCompatActivity {
     private static int totalTabsCount = 0;
     private static int[] answerSituation;
     private static ArrayList exerciseAnswer = new ArrayList();
+    private static String username = "";
 
     private TabLayout mTabLayout;
     private ViewPager mViewPager;
@@ -37,6 +39,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Intent intent = getIntent();
+        String username = intent.getStringExtra("username");
+        String exercisename = intent.getStringExtra("exercisename");
 
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         mTabLayout = (TabLayout) findViewById(R.id.tablayout);
@@ -63,12 +69,14 @@ public class MainActivity extends AppCompatActivity {
 
         myDBHelper = new MyDBHelper(this, "exercise.db", null, 1);
         database = myDBHelper.getWritableDatabase();
-        cursor = database.rawQuery("SELECT * FROM exercise_list", null);
+        cursor = database.rawQuery("SELECT * FROM exercise_list where exercise_name = '" + exercisename + "'", null);
 
         /* 设置总共展示的题目数量 */
         setTotalTabsCount(10);
         /* 定义做题情况列表 */
         initAnswerSituation();
+        /* 设置用户名 */
+        setUsername(username);
 
         Set<Integer> randomIndexSet = getRandomExercise();
         int id = 0;
@@ -121,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
     private Set<Integer> getRandomExercise() {
         Set<Integer> hashset = new HashSet<>();
         while (true) {
-            hashset.add((int) (Math.random() * 16));
+            hashset.add((int) (Math.random() * cursor.getCount()));
             if (hashset.size() == 10) {
                 return hashset;
             }
@@ -164,5 +172,13 @@ public class MainActivity extends AppCompatActivity {
 
     public static void setTotalTabsCount(int totalTabsCount) {
         MainActivity.totalTabsCount = totalTabsCount;
+    }
+
+    public static String getUsername() {
+        return username;
+    }
+
+    public static void setUsername(String username) {
+        MainActivity.username = username;
     }
 }
