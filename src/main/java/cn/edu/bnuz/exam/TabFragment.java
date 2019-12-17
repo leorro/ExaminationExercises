@@ -1,6 +1,7 @@
 package cn.edu.bnuz.exam;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -243,7 +244,7 @@ public class TabFragment extends Fragment implements View.OnClickListener {
 
     /* 展示成绩分析报告对话框 */
     private void showDialog() {
-        String dialogMessage = "";
+        String dialogMessage = exercisename + "\n\n";
         int[] answerSituation = MainActivity.getAnswerSituation();
         int count = MainActivity.getTotalTabsCount();
         double total = 0;
@@ -266,19 +267,35 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         alterDiaglog.setTitle("成绩分析报告");
         alterDiaglog.setMessage(dialogMessage);
 
-        alterDiaglog.setPositiveButton("确认并退出", new DialogInterface.OnClickListener() {
+        alterDiaglog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 jumpToIndex();
             }
         });
-
-        alterDiaglog.setNeutralButton("返回", new DialogInterface.OnClickListener() {
+        alterDiaglog.setNegativeButton("返回", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        final String finalDialogMessage = dialogMessage;
+        alterDiaglog.setNeutralButton("分享", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                jumpToIndex();
+                shareText(getContext(), finalDialogMessage);
             }
         });
 
         alterDiaglog.show();
+    }
+
+    private void shareText(Context context, String message) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_SUBJECT, "成绩报告");
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        context.startActivity(Intent.createChooser(intent, "成绩报告"));
     }
 }
