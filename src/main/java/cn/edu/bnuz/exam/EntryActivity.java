@@ -4,14 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 public class EntryActivity extends AppCompatActivity implements View.OnClickListener {
-    Button softwaretest;
-    Button softwareengine;
     EditText usernameBox;
+    ImageView test;
+    ImageView engine;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,11 +19,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_entry);
 
         usernameBox = (EditText) findViewById(R.id.username);
-        softwareengine = (Button) findViewById(R.id.softwaretest);
-        softwaretest = (Button) findViewById(R.id.sofwareengine);
+        engine = (ImageView) findViewById(R.id.softwareengine);
+        test = (ImageView) findViewById(R.id.softwaretesttest);
 
-        softwareengine.setOnClickListener(this);
-        softwaretest.setOnClickListener(this);
+
+        engine.setOnClickListener(this);
+        test.setOnClickListener(this);
     }
 
     @Override
@@ -40,10 +41,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         switch (buttonId) {
-            case R.id.softwaretest:
+            case R.id.softwaretesttest:
                 bundle.putString("exercisename", "软件测试");
                 break;
-            case R.id.sofwareengine:
+            case R.id.softwareengine:
                 bundle.putString("exercisename", "软件工程");
                 break;
         }
