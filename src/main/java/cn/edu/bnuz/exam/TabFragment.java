@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -108,9 +109,16 @@ public class TabFragment extends Fragment implements View.OnClickListener {
         View view = this.exerciseView;
         for (int index = 0; index < 4; index++) {
             int buttonId = buttonIdList[index];
+            String theme = MainActivity.getCurrentTheme();
             Button button = view.findViewById(buttonId);
-            button.setBackgroundResource(R.drawable.option_default);
-            button.setTextColor(Color.rgb(102, 102, 102));
+            Log.d(TAG, theme);
+            if (theme.equals("light")) {
+                button.setBackgroundResource(R.drawable.option_default);
+                button.setTextColor(Color.rgb(102, 102, 102));
+            } else {
+                button.setBackgroundResource(R.drawable.option_dark);
+                button.setTextColor(Color.rgb(167, 167, 167));
+            }
 
             selectedButton[index] = false;
         }
@@ -226,8 +234,14 @@ public class TabFragment extends Fragment implements View.OnClickListener {
             button.setTextColor(Color.rgb(255, 255, 255));
             selectedButton[selectedIndex] = true;
         } else {
-            button.setBackgroundResource(R.drawable.option_default);
-            button.setTextColor(Color.rgb(102, 102, 102));
+            String theme = MainActivity.getCurrentTheme();
+            if (theme.equals("light")) {
+                button.setBackgroundResource(R.drawable.option_default);
+                button.setTextColor(Color.rgb(102, 102, 102));
+            } else {
+                button.setBackgroundResource(R.drawable.option_dark);
+                button.setTextColor(Color.rgb(167, 167, 167));
+            }
             selectedButton[selectedIndex] = false;
         }
     }

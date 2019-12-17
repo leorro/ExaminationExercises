@@ -3,12 +3,21 @@ package cn.edu.bnuz.exam;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,7 +33,9 @@ public class MainActivity extends AppCompatActivity {
     private static int[] answerSituation;
     private static ArrayList exerciseAnswer = new ArrayList();
     private static String username = "";
+    private static String theme = "light";
 
+    private ScrollView scrollView;
     private TabLayout mTabLayout;
     private ViewPager mViewPager;
     private FragmentAdapter adapter;
@@ -125,6 +136,92 @@ public class MainActivity extends AppCompatActivity {
         mTabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
     }
 
+    /* 创建菜单 */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    /* 监听主题选择 */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.light_theme:
+                setTheme("light");
+                break;
+            case R.id.dark_theme:
+                setTheme("dark");
+                break;
+            default:
+                break;
+        }
+        setTabTheme();
+        return true;
+    }
+
+    private void setTabTheme() {
+        int[] buttonIdList = new int[]{R.id.button1, R.id.button2, R.id.button3, R.id.button4};
+        int[] optionIdList = new int[]{R.id.option1, R.id.option2, R.id.option3, R.id.option4};
+        for (int index = 0; index < 10; index++) {
+            int darkBackgroundColor = Color.rgb(34, 34, 34);
+            int darkTextColorDefault = Color.rgb(167, 167, 167);
+            int darkTextColorActive = Color.rgb(255, 255, 255);
+            int lightBackgroundColor = Color.rgb(255, 255, 255);
+            int lightTextColorDefault = Color.rgb(102, 102, 102);
+            int lightTextColorActive = Color.rgb(51, 51, 51);
+
+            View currentView = adapter.getItem(index).getView();
+            TextView topicTextView = (TextView) currentView.findViewById(R.id.topicTextView);
+
+            if (getCurrentTheme().equals("light")) {
+                mViewPager.setBackgroundColor(lightBackgroundColor);
+                mTabLayout.setBackgroundColor(lightBackgroundColor);
+                mTabLayout.setTabTextColors(lightTextColorDefault, lightTextColorActive);
+            } else {
+                mViewPager.setBackgroundColor(darkBackgroundColor);
+                mTabLayout.setBackgroundColor(darkBackgroundColor);
+                mTabLayout.setTabTextColors(darkTextColorDefault, darkTextColorActive);
+            }
+
+            if (getCurrentTheme().equals("light")) {
+                topicTextView.setTextColor(lightTextColorDefault);
+            } else {
+                topicTextView.setTextColor(darkTextColorDefault);
+            }
+
+            for (int buttonId : buttonIdList) {
+                Button button = (Button) currentView.findViewById(buttonId);
+//                Drawable drawable = (Drawable) button.getBackground();
+//                Log.d("MainActivity", String.valueOf(drawable));
+//                Log.d("MainActivity", String.valueOf(getDrawable(R.drawable.option_active)));
+//
+//                if (drawable==getDrawable(R.drawable.option_active)
+//                        || drawable==getDrawable(R.drawable.option_error)
+//                        || drawable==getDrawable(R.drawable.option_miss)) {
+//                    Log.d("MainActivity", "equal");
+//                    continue;
+//                }
+                if (getCurrentTheme().equals("light")) {
+                    button.setTextColor(lightTextColorDefault);
+                    button.setBackgroundResource(R.drawable.option_default);
+                } else {
+                    button.setTextColor(darkTextColorDefault);
+                    button.setBackgroundResource(R.drawable.option_dark);
+                }
+            }
+
+            for (int optionId : optionIdList) {
+                TextView optionTextView = (TextView) currentView.findViewById(optionId);
+                if (getCurrentTheme().equals("light")) {
+                    optionTextView.setTextColor(lightTextColorDefault);
+                } else {
+                    optionTextView.setTextColor(darkTextColorDefault);
+                }
+            }
+        }
+    }
+
     /* 生成随机题目下标集合 */
     private Set<Integer> getRandomExercise() {
         Set<Integer> hashset = new HashSet<>();
@@ -180,5 +277,13 @@ public class MainActivity extends AppCompatActivity {
 
     public static void setUsername(String username) {
         MainActivity.username = username;
+    }
+
+    public static String getCurrentTheme() {
+        return theme;
+    }
+
+    public static void setTheme(String theme) {
+        MainActivity.theme = theme;
     }
 }

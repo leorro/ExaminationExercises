@@ -6,8 +6,10 @@
         android:layout_height="match_parent">
 
     <ScrollView
+            android:id="@+id/scrollView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            >
 
         <RelativeLayout
                 android:layout_width="match_parent"
@@ -19,7 +21,8 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@id/option"
                     android:layout_marginTop="20dp"
-                    android:gravity="center">
+                    android:gravity="center"
+                    >
 
                 <Button
                         android:id="@+id/submit"
@@ -59,7 +62,8 @@
                         android:layout_height="wrap_content"
                         android:lineSpacingExtra="5dp"
                         android:text="\t\t\t\t\t\t\t\t\t\t\t人们常常把软件工程的方法（开发方法）、工具（支持方法的工具）、（）称为软件工程三要素。"
-                        android:textSize="24dp" />
+                        android:textSize="24dp"
+                        />
 
             </RelativeLayout>
 
