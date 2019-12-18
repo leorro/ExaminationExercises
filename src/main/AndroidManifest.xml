@@ -17,13 +17,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-        </activity>
+        <activity
+                android:name=".MainActivity"
+                android:configChanges="orientation|keyboardHidden|screenSize"></activity>
         <activity
                 android:name=".IndexActivity"
                 android:label="成绩排行榜"></activity>

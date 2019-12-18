@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -32,12 +33,19 @@ public class TabFragment extends Fragment implements View.OnClickListener {
     private boolean isSubmit = false;
     private double total = 0;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
+
     public static TabFragment newInstance(ExerciseInfo exerciseInfo) {
         /* 为下面的onCreateView传数据 */
         Bundle bundle = new Bundle();
         bundle.putSerializable("exerciseInfo", exerciseInfo);
         TabFragment fragment = new TabFragment();
         fragment.setArguments(bundle);
+        fragment.setRetainInstance(true);
         return fragment;
     }
 
