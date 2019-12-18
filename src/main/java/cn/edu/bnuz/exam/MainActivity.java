@@ -192,16 +192,15 @@ public class MainActivity extends AppCompatActivity {
 
             for (int buttonId : buttonIdList) {
                 Button button = (Button) currentView.findViewById(buttonId);
-//                Drawable drawable = (Drawable) button.getBackground();
-//                Log.d("MainActivity", String.valueOf(drawable));
-//                Log.d("MainActivity", String.valueOf(getDrawable(R.drawable.option_active)));
-//
-//                if (drawable==getDrawable(R.drawable.option_active)
-//                        || drawable==getDrawable(R.drawable.option_error)
-//                        || drawable==getDrawable(R.drawable.option_miss)) {
-//                    Log.d("MainActivity", "equal");
-//                    continue;
-//                }
+
+                Drawable.ConstantState drawable = (Drawable.ConstantState) button.getBackground().getConstantState();
+
+                /* 判断是否已经选中，选中了则不进行改变主题 */
+                if (drawable.equals(getDrawable(R.drawable.option_active).getConstantState())
+                        || drawable.equals(getDrawable(R.drawable.option_error))
+                        || drawable.equals(getDrawable(R.drawable.option_miss))) {
+                    continue;
+                }
                 if (getCurrentTheme().equals("light")) {
                     button.setTextColor(lightTextColorDefault);
                     button.setBackgroundResource(R.drawable.option_default);
