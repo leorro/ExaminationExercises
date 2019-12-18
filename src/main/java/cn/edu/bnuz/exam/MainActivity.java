@@ -197,8 +197,8 @@ public class MainActivity extends AppCompatActivity {
 
                 /* 判断是否已经选中，选中了则不进行改变主题 */
                 if (drawable.equals(getDrawable(R.drawable.option_active).getConstantState())
-                        || drawable.equals(getDrawable(R.drawable.option_error))
-                        || drawable.equals(getDrawable(R.drawable.option_miss))) {
+                        || drawable.equals(getDrawable(R.drawable.option_error).getConstantState())
+                        || drawable.equals(getDrawable(R.drawable.option_miss).getConstantState())) {
                     continue;
                 }
                 if (getCurrentTheme().equals("light")) {
